@@ -5,7 +5,7 @@ const ai = new GoogleGenAI({});
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    const { message, history } = await req.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       if (msg.includes("কেমন আছো") || msg.includes("how are you")) {
         reply = "আমি খুব ভালো আছি! আপনি কেমন আছেন?";
       } else if (msg.includes("নাম কি") || msg.includes("নাম কী") || msg.includes("name")) {
-        reply = "আমার নাম ভয়েস এআই। আমাকে আপনার সাহায্য করার জন্য তৈরি করা হয়েছে।";
+        reply = "আমার নাম সেহরিশ। আমাকে আপনার সাহায্য করার জন্য তৈরি করা হয়েছে।";
       } else if (msg.includes("ভালোবাসি") || msg.includes("love")) {
         reply = "আপনাকেও অনেক ধন্যবাদ! আমি আপনাকে সাহায্য করতে পেরে আনন্দিত।";
       } else if (msg.includes("ধন্যবাদ") || msg.includes("thanks")) {
@@ -32,10 +32,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ response: reply });
     }
 
-    // Send to Gemini model
+    // Format conversation history for Gemini
+    const contents = [];
+    if (history && Array.isArray(history)) {
+      for (const msg of history) {
+        contents.push({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.text }]
+        });
+      }
+    }
+    // Add the current user message
+    contents.push({
+      role: 'user',
+      parts: [{ text: message }]
+    });
+
+    // Send to Gemini model with history
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: message,
+      contents: contents,
       config: {
         systemInstruction: "Your name is Sehrish (সেহরিশ). You are a friendly, conversational AI assistant. When someone asks who you are or greets you, always introduce yourself by saying 'Hello, I am Sehrish' (বা বাংলায় 'হ্যালো, আমি সেহরিশ'). Respond in the same language as the user (Bengali or English). Keep your responses concise and natural, as they will be read aloud by text-to-speech. Do not use markdown formatting in your responses, just plain text.",
       }

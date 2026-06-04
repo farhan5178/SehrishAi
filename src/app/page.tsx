@@ -61,7 +61,10 @@ export default function Home() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
+        body: JSON.stringify({ 
+          message: text,
+          history: messages // Send previous conversation history
+        })
       });
       const data = await res.json();
       
