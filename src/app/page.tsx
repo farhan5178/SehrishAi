@@ -42,6 +42,14 @@ export default function Home() {
   }, []);
 
   const toggleListening = () => {
+    // Mobile browsers block speech synthesis if not initiated by a direct user action.
+    // Waking up the speech synthesis engine with an empty utterance on button click fixes this.
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const warmupUtterance = new SpeechSynthesisUtterance('');
+      warmupUtterance.volume = 0;
+      window.speechSynthesis.speak(warmupUtterance);
+    }
+
     if (isListening) {
       recognitionRef.current?.stop();
     } else {
